@@ -16,7 +16,10 @@ COPY --from=builder /install /usr/local/lib/python3.10/site-packages
 RUN mv /usr/local/lib/python3.10/site-packages/lib/python3.10/site-packages/* /usr/local/lib/python3.10/site-packages/
 
 COPY zotify /app/zotify
+COPY docker-entrypoint.sh /entrypoint.sh
 
 WORKDIR /app
 EXPOSE 4381
-CMD ["python3", "-m", "zotify"]
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python3", "-m", "zotify.gpt"]

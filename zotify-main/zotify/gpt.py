@@ -240,10 +240,18 @@ async def _run_zotify_download(
         )
 
         # Ensure single login; reuse session on subsequent commands
-        if getattr(Zotify, "SESSION", None) is None:
+        # --- FIX: Always re-initialize if session is missing or expired ---
+        session_valid = getattr(Zotify, "SESSION", None) is not None
+        # If you have a session expiry check, use it here:
+        # session_valid = session_valid and not Zotify.SESSION.is_expired()
+        if not session_valid:
             Zotify(args)
         else:
-            Zotify.CONFIG.load(args)
+            try:
+                Zotify.CONFIG.load(args)
+            except Exception:
+                # If loading config fails, re-init session
+                Zotify(args)
 
         # Set runtime download quality similar to CLI
         quality_options = {
@@ -503,7 +511,7 @@ async def _send_audio_and_lyrics(
 
 # ---------------- Bot handlers ----------------
 
-HELP_TEXT = """🎵 Maxxiey Bot
+HELP_TEXT = """maxxiey Bot
 
 Use me to search and download Spotify content.
 
@@ -612,7 +620,7 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("Lyrics only", callback_data=f"do:{TRACK}:{id_}:lrc")],
                 [InlineKeyboardButton("Song only (no lyrics)", callback_data=f"do:{TRACK}:{id_}:song")],
                 [InlineKeyboardButton("Song + Lyrics (separate)", callback_data=f"do:{TRACK}:{id_}:both")],
-                [InlineKeyboardButton("Song with embedded lyrics (single file)", callback_data=f"do:{TRACK}:{id_}:embed")],
+                [InlineKeyboardButton("Song with embedded lyrics (one file)", callback_data=f"do:{TRACK}:{id_}:embed")],
             ])
             await query.edit_message_text("Choose what to download:", reply_markup=kb)
             return
@@ -696,11 +704,17 @@ async def on_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if action != "get":
+
         await query.edit_message_text("Unknown action.")
+
         return
+
+
 
     # Default GET path
     url = _spotify_url_for(type_, id_)
+
+
 
     async def job():
         await query.edit_message_text(f"⏬ Downloading i'll send it here when done: {type_} …")
@@ -771,7 +785,7 @@ if __name__ == "__main__":
 
 
 
-HELP_TEXT = """🎵 Maxxiey Bot
+HELP_TEXT = """maxxiey Bot
 
 
 

@@ -1,6 +1,5 @@
 ffmpy
-# Use maintained librespot-python branch
-librespot @ git+https://github.com/zotify-dev/librespot-python.git@main
+# librespot @ git+https://github.com/librespot-org/librespot-python.git@main
 music_tag
 Pillow
 pkce

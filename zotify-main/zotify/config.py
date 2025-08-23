@@ -579,7 +579,22 @@ class Zotify:
     @classmethod
     def login(cls, args):
         """ Authenticates and saves credentials to a file """
-        
+
+        # PATCH: Use ~/.config/zotify/credentials.json if present and valid
+        creds_path = Path.home() / ".config/zotify/credentials.json"
+        if creds_path.exists():
+            try:
+                with open(creds_path, "r") as f:
+                    creds_data = json.load(f)
+                if creds_data.get("type") == "AUTHENTICATION_STORED_SPOTIFY_CREDENTIALS":
+                    auth_as_bytes = base64.b64encode(json.dumps(creds_data, ensure_ascii=True).encode("ascii"))
+                    session_builder = Session.Builder()
+                    cls.SESSION = session_builder.stored(auth_as_bytes).create()
+                    print("[INFO] Using stored Spotify credentials from ~/.config/zotify/credentials.json.")
+                    return
+            except Exception as e:
+                print(f"[WARN] Failed to use stored credentials: {e}")
+
         creds = cls.CONFIG.get_credentials_location()
         if creds and Path(creds).exists():
             cls.SESSION = Session.Builder().stored_file(creds).create()
